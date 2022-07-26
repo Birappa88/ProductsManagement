@@ -81,11 +81,11 @@ const createUser = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Enter the pincode" });
       }
-      if(!pincodeRegex.test(address.shipping.pincode)){
-        return res
-        .status(400)
-        .send({ status: false, message: "Enter the valid pincode" });
-      }
+      // if(!pincodeRegex.test(address.shipping.pincode)){
+      //   return res
+      //   .status(400)
+      //   .send({ status: false, message: "Enter the valid pincode" });
+      // }
      if(!address.billing.street){
         return res
         .status(400)
@@ -101,11 +101,11 @@ const createUser = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Enter the valid pincode" });
      }
-     if(!pincodeRegex.test(address.billing.pincode)){
-        return res
-        .status(400)
-        .send({ status: false, message: "Enter the valid pincode" });
-      }
+    //  if(!pincodeRegex.test(address.billing.pincode)){
+    //     return res
+    //     .status(400)
+    //     .send({ status: false, message: "Enter the valid pincode" });
+    //   }
 
       if(!nameRegex.test(fname)){
         return res
@@ -122,11 +122,7 @@ const createUser = async function (req, res) {
         .status(400)
         .send({ status: false, message: "plz enter  the valid Email" });
       }
-      if(!passwordRegex.test(password)){
-        return res
-        .status(400)
-        .send({ status: false, message: "plz enter  the valid passwprd" });
-      }
+     
       if(!phoneRegex.test(phone)){
         return res
         .status(400)
@@ -160,15 +156,19 @@ const createUser = async function (req, res) {
     body.profileImage = uploadProfileImage;
     }
     else {
-        return res.status(400).send({status:false, message :"please upload the profile Imge "})
+        return res.status(400).send({status:false, message :"please upload the profile Image "})
     }
+
     let userCreated = await userModel.create(body);
+
     res.status(201).send({
       status: true,
       message: "User cerated Successfully",
       data: userCreated,
     });
+
   } catch (err) {
+    console.log(err.message)
     res.status(500).send({
       status: false,
       Error: "server not  responding",
