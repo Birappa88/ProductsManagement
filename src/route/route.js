@@ -1,7 +1,16 @@
 const express = require("express");
-const { createUser } = require("../controllers/uesrController");
+const { createUser,loginUser, getUser, updateUser} = require("../controllers/uesrController");
+const { authorization,authentication } = require("../middleware/Authentication");
+
 const router = express.Router();
 
-router.post("/register", createUser);
+
+//Feature 1 User ApIs 
+router.post("/register",createUser);
+router.post("/login",loginUser);
+router.get("/user/:userId/profile",authentication, getUser);
+router.put("/user/:userId/profile",authentication,authorization,updateUser)
+
+//Feature 2 User ApIs 
 
 module.exports =router;
