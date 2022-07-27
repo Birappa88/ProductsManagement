@@ -184,15 +184,14 @@ const createUser = async function (req, res) {
 //******loginUser********** */
 const loginUser = async function (req, res) {
   try {
-    let data = req.body;
+    let body = req.body;
+    const { email, password } = body;
 
-    if (!isValidRequestBody(data)) {
+    if (!isValidRequestBody(body)) {
       return res
         .status(400)
         .send({ status: false, message: "Insert Data : BAD REQUEST" });
     }
-
-    let { email, password } = data;
 
     if (!isValid(email)) {
       return res
@@ -210,21 +209,21 @@ const loginUser = async function (req, res) {
         .send({ status: false, message: `${email} valid Email Id` });
     }
     if (!passwordRegex.test(password)) {
-      return res
-        .status(400)
-        .send({
-          status: false,
-          message:
-            "password  length be valid and length should be in between 8 to 15",
-        });
+      return res.status(400).send({
+        status: false,
+        message:
+          "password  length be valid and length should be in between 8 to 15",
+      });
     }
-    const userEmail = await userModel.findOne({ email: email });
-    if (!userEmail) {
-      return res.status(401).send({ status: false, message: "Invalid credentials" });
+    const user = await userModel.findOne({ email: email });
+    if (!user) {
+      return res
+        .status(401)
+        .send({ status: false, message: "Invalid credentials" });
     }
 
-    let hashedPassword = userEmail.password;
-    let userPassword = bcrypt.compareSync(password, hashedPassword);
+    let userPassword = await bcrypt.compareSync(body.password, user.password);
+    console.log(userPassword);
 
     if (!userPassword) {
       return res
@@ -232,20 +231,23 @@ const loginUser = async function (req, res) {
         .send({ status: false, message: "Invalid Password" });
     }
 
-    let userId = userEmail._id;
     let token = jwt.sign(
       {
-        userId: userId, //unique Id
+        userId: user._id, //unique Id
         at: Math.floor(Date.now() / 1000), //issued date
         exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, //expires in 24 hr
       },
-      "Group15"
+      "Group-15"
     );
 
     res.setHeader("Authorization", token);
     res
       .status(200)
-      .send({ status: true, message: "Success", data: { userId, token } });
+      .send({
+        status: true,
+        message: "login Successful",
+        data: { userId: user._id, token: token },
+      });
   } catch (err) {
     return res.status(500).send({ status: false, message: err.message });
   }
@@ -266,17 +268,13 @@ const getUser = async function (req, res) {
         .status(400)
         .send({ status: false, message: "UserId is incorrect" });
     }
-    if (req.token.userId != userId) {
-      return res
-        .status(401)
-        .send({ status: false, message: "Not authenticate" });
-    }
+
     const user = await userModel.findOne({ _id: userId });
 
     if (!user) {
       return res.status(404).send({
         status: false,
-        message: `user id did't find this ${userId} id`,
+        message: `user id did't not  find this ${userId} id`,
       });
     }
     return res

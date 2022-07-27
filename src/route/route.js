@@ -8,7 +8,7 @@ const router = express.Router();
 //Feature 1 User ApIs 
 router.post("/register",createUser);
 router.post("/login",loginUser);
-router.get("/user/:userId/profile",authentication, getUser);
+router.get("/user/:userId/profile",authentication, authorization, getUser);
 router.put("/user/:userId/profile",authentication,authorization,updateUser)
 
 //Feature 2 User ApIs 
