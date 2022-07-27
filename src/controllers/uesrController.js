@@ -121,24 +121,15 @@ const createUser = async function (req, res) {
         .status(400)
         .send({ status: false, message: "plz enter  the valid Email" });
     }
-    if (!passwordRegex.test(password)) {
-      return res
-        .status(400)
-        .send({ status: false, message: "plz enter  the valid passwprd" });
-    }
-    if (!phoneRegex.test(phone)) {
-      return res
-        .status(400)
-        .send({ status: false, message: "plz enter  the valid phone" });
-    }
 
-    let checkEmail = await userModel.findOne({ email: body.email });
+    let checkEmail = await userModel.findOne({ email: email });
     if (checkEmail) {
       return res.status(400).send({
         status: false,
-        message: `${body.email} already exists use the diff email `,
+        message: `${email} already exists use the diff email `,
       });
     }
+
     let checkphone = await userModel.findOne({ phone: body.phone });
     if (checkphone) {
       return res.status(400).send({
@@ -237,13 +228,11 @@ const loginUser = async function (req, res) {
     );
 
     res.setHeader("Authorization", token);
-    res
-      .status(200)
-      .send({
-        status: true,
-        message: "login Successful",
-        data: { userId: user._id, token: token },
-      });
+    res.status(200).send({
+      status: true,
+      message: "login Successful",
+      data: { userId: user._id, token: token },
+    });
   } catch (err) {
     return res.status(500).send({ status: false, message: err.message });
   }
@@ -318,20 +307,110 @@ const updateUser = async function (req, res) {
           .send({ status: false, message: "plz enter  the valid Email" });
       }
     }
+    let checkEmail = await userModel.findOne({ email: email });
+    if (checkEmail) {
+      return res.status(400).send({
+        status: false,
+        message: `${email} already exists use the diff email `,
+      });
+    }
+    if (phone) {
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).send({
+          status: false,
+          message: `${phone} invalid phone  Number`,
+        });
+      }
+      const isphoneAleradyExist = await userModel.findOne({ phone: phone });
+      if (isphoneAleradyExist) {
+        return res.status(400).send({
+          status: false,
+          message: `${phone} already exists use the diff phone `,
+        });
+      }
+    }
 
+    let password;
+    if (data.password) {
+      if (!passwordRegex.test(data.password)) {
+        return res.status(400).send({
+          status: false,
+          message: `${password} password length should be mix 8 or max 15 `,
+        });
+      }
+      password = await bcrypt.hash(data.password, 10);
+    }
+
+    //let address = json.parse(JSON.stringify(data))
+
+    if (data.address) {
+      const address = JSON.parse(data.address);
+      data.address = address;
+      const shipping = address.shipping;
+      if (shipping) {
+        if (shipping.pincode) {
+          if (!pincodeRegex.test(shipping.pincode))
+            return res.status(400).send({
+              status: false,
+              message: `enter valid pincode`,
+            });
+        }
+      }
+    }
+
+    const billing = address.billing;
+    if (billing) {
+      if (billing.pincode) {
+        if (!pincodeRegex.test(billing.pincode)) {
+          return res.status(400).send({
+            status: false,
+            message: `enter the valid pincode `,
+          });
+        }
+      }
+    }
     const newData = { fname, lname, email, phone, password, profileImage };
     const updatedUser = await userModel.findOneAndUpdate(
       { _id: req.userId },
       newData,
       { new: true }
     );
-    updateUser.save();
+
+    if(data.address){
+        const shipping =data.address.shipping;
+        if(shipping){
+            if(shipping.street){
+                updateUser.address.shipping.street =shipping.street;
+            }
+            if(shipping.city){
+                updateUser.address.shipping.city =shipping.city;
+            }
+            if(shipping.pincode){
+                updateUser.address.shipping.pincode =shipping.pincode;
+            }
+        }
+        const  billing =data.address.billing;
+        if(billing){
+            if(billing.street){
+                updateUser.address.billing.street = billing.street;
+            }
+            if(billing.city){
+                updateUser.address.billing.city =billing.city;
+            }
+            if(billing.pincode){
+                updateUser.address.billing.pincode = billing.pincode
+            }
+        }
+    }
+
+    updatedUser.save();
     return res
       .status(200)
-      .send({ status: true, message: "User updated", data: updateUser });
+      .send({ status: true, message: "User updateded", data: updatedUser });
+
+
   } catch (error) {
-    return res.status(500).send({ status: false, message: err.message });
+    return res.status(500).send({ status: false, message: error.message });
   }
 };
-
 module.exports = { createUser, loginUser, getUser, updateUser };
