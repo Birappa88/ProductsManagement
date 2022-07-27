@@ -16,12 +16,14 @@ const authentication = async function (req, res, next) {
       const decodedToken = jwt.verify(splitToken[1], "Group-15", {
         ignoreExpiration: true,
       });
+      console.log(decodedToken.exp)
+      console.log(Date.now())
       if (Date.now() > decodedToken.exp * 1000) {
         return res
           .status(401)
           .send({ status: false, message: "session expired" });
       }
-      req.userId = decodedToken.userId;
+      req.useId = decodedToken.userId;
     } catch (error) {
       return res
         .status(401)
@@ -55,7 +57,7 @@ const authorization = async function (req, res, next) {
     if (!user) {
       return res.status(404).send({ status: false, message: "user not found" });
     }
-    if (req.userId != _id) {
+    if (req.useId != _id) {
       return res.status(401).send({ status: false, message: "Not authorised" });
     }
     console.log("Authorization successfull");

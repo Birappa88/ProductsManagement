@@ -16,6 +16,10 @@ const isValidFiles = function (files) {
   if (files && files.length > 0) return true;
 };
 
+const isValidSizes = function (sizes) {
+  return ["S", "XS","M","X", "L","XXL", "XL"].includes(sizes) !== -1
+}
+
 const validFileRegex =
   /^.+\.(?:(?:[dD][oO][cC][xX]?)|(?:[pP][dD][fF])|(?:[pP][nN][gG])|(?:[jJ][pP][gG]))$/;
 
@@ -31,6 +35,7 @@ module.exports = {
   isValidObjectId,
   isValidFiles,
   isValidRequestBody,
+  isValidSizes,
   validFileRegex,
   nameRegex,
   passwordRegex,

@@ -174,11 +174,7 @@ const createUser = async function (req, res) {
 
   } catch (err) {
     console.log(err.message)
-    res.status(500).send({
-      status: false,
-      Error: "server not  responding",
-      message: err.message,
-    });
+    res.status(500).send({status: false,Error: "server not  responding", message: err.message });
   }
 };
 //******loginUser********** */
@@ -239,6 +235,7 @@ const loginUser = async function (req, res) {
       },
       "Group-15"
     );
+    console.log(Date.now())
 
     res.setHeader("Authorization", token);
     res
@@ -329,12 +326,12 @@ const updateUser = async function (req, res) {
       newData,
       { new: true }
     );
-    updateUser.save();
+    updatedUser.save();
     return res
       .status(200)
-      .send({ status: true, message: "User updated", data: updateUser });
+      .send({ status: true, message: "User updated", data: updatedUser });
   } catch (error) {
-    return res.status(500).send({ status: false, message: err.message });
+    return res.status(500).send({ status: false, message: error.message });
   }
 };
 
