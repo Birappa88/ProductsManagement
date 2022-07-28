@@ -138,6 +138,12 @@ const createUser = async function (req, res) {
       });
     }
 
+    if (!passwordRegex.test(password)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "plz enter  the valid password" });
+    }
+
     let securePassword = body.password;
     const encrytedpassword = async function (securePassword) {
       const passwordHash = await bcrypt.hash(securePassword, 10);
