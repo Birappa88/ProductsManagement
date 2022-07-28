@@ -3,16 +3,11 @@ const bcrypt = require("bcrypt");
 const { uploadFile } = require("../aws/aws");
 const {
     isValid,
-    isValidFiles,
     isValidRequestBody,
     isValidObjectId,
-    isValidSizes,
     validFileRegex,
     stringRegex,
-    passwordRegex,
-    phoneRegex,
-    pincodeRegex,
-    emailRegex
+   
 } = require("../middleware/validator");
 
 const createProduct = async (req, res) => {
@@ -140,13 +135,20 @@ const createProduct = async (req, res) => {
     }
 }
 
+
 //********GET all Product ***************/
 
 const getfilterProduct = async (req, res) => {
     try {
         let data = req.query
-
-
+        
+        for (const [key, value] of Object.entries(data)) {
+            if (key) {
+                if (!value) {
+                    
+                }
+            }
+        }
         if (!isValidRequestBody(data)) {
             const checkProduct = await productModel.find({ isDeleted: false })
             if (!checkProduct) {
@@ -158,7 +160,8 @@ const getfilterProduct = async (req, res) => {
                 .status(200)
                 .send({ status: true, message: "product found succesfully", data: checkProduct })
         }
-        else {
+        else
+     {
             let name = req.query.name
             let size = req.query.size
             let priceGreaterThan = req.query.priceGreaterThan
@@ -192,27 +195,29 @@ const getfilterProduct = async (req, res) => {
                 }
             }
 
-
-            if (req.query.priceSort) {
-                if (req.query.priceSort != 1 || req.query.priceSort != -1) {
+            if (req.query.priceSort ) {
+                if (!/^(-1||1)$/.test(req.query.priceSort)) {
                     return res.status(400).send({ status: false, message: "Use 1 for high or -1 for low" })
                 }
-
             }
 
-            let filteredProduct = await productModel.find({ $and: [filter] }).sort({ price: req.query.priceSort })
-
-
-            if (filteredProduct.length == 0) {
-                return res.status(404).send({ status: false, message: "No such any product found" })
+            if (!priceGreaterThan && !priceLessThan ) {
+                let productList = await productModel.find(filter).sort({ price: req.query.priceSort })
+                if (productList.length == 0) {
+                    return res.status(404).send({ status: false, message: "No such any product Available" })
+                }
+                return res.status(200).send({ status: true, message: "product found", data: productList }) 
             }
 
-            else {
-                return res.status(200).send({ status: true, message: "product found", data: filteredProduct })
-
+            if (priceGreaterThan && priceLessThan) {
+            let productList = await productModel.find({$and: [filter,{price:{$gt:priceGreaterThan}},{price:{$lt:priceLessThan}}]}).sort({ price: req.query.priceSort })
+            
+            if (productList.length == 0) {
+                return res.status(404).send({ status: false, message: "No such any product Available" })
             }
-
+            return res.status(200).send({ status: true, message: "product found", data: productList }) 
         }
+    }
 
     } catch (err) {
         return res.status(500).send({ status: false, message: err.message })
@@ -256,7 +261,7 @@ const getProduct = async function (req, res) {
 };
 
 
-//************PUT or Updated *******************/
+//************ PUT or Update Product *******************/
 
 const updateProduct = async function (req, res) {
     try {
@@ -278,10 +283,10 @@ const updateProduct = async function (req, res) {
                 .send({ status: false, message: "productId is incorrect" });
         }
 
-        let { title, description, price, currencyId, currencyFormat, style, availableSizes, productImage, installments } = data;
+        let { title, description, price, currencyId, currencyFormat, style, availableSizes, installments } = data;
 
 
-        if (title) {
+        if (title != null) {
             if (!stringRegex.test(title)) {
                 return res
                     .status(400)
@@ -294,19 +299,19 @@ const updateProduct = async function (req, res) {
                     .send({ status: false, message: "Title is already exist, plz enter new title" });
             }
         }
-        if (description) {
+        if (description != null) {
             if (!stringRegex.test(description)) {
                 return res
                     .status(400)
                     .send({ status: false, message: "plz enter  the valid lname" });
             }
         }
-        if (price) {
+        if (price != null) {
             if (!/^[+]?([0-9]+\.?[0-9]*|\.[0-9]+)$/.test(price)) {
                 return res.status(400).send({ status: false, message: `Invalid price` })
             }
         }
-        if (currencyFormat) {
+        if (currencyFormat != null) {
             if (currencyFormat !== "₹") {
                 return res
                     .status(400)
@@ -314,14 +319,14 @@ const updateProduct = async function (req, res) {
             }
         }
 
-        if (currencyId) {
+        if (currencyId != null) {
             if (currencyId !== "INR") {
                 return res
                     .status(400)
                     .send({ status: false, message: "CurrencyId should be in INR" });
             }
         }
-        if (style) {
+        if (style != null) {
             if (!stringRegex.test(style)) {
                 return res
                     .status(400)
@@ -329,7 +334,7 @@ const updateProduct = async function (req, res) {
             }
         }
 
-        if (availableSizes) {
+        if (availableSizes != null) {
             let sizes = availableSizes.toUpperCase().split(",")
             let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
 
@@ -339,14 +344,14 @@ const updateProduct = async function (req, res) {
             data['availableSizes'] = sizes
         }
 
-        if (req.files) {
+        if (req.files != null) {
             let files = req.files;
             if (files && files.length > 0) {
                 let uploadProductImage = await uploadFile(files[0]);
                 data.productImage = uploadProductImage;
             }
         }
-        if (installments) {
+        if (installments != null) {
             if (!/^[+]?([0-9]+\.?[0-9]*|\.[0-9]+)$/.test(price)) {
                 return res.status(400).send({ status: false, message: `Invalid installments` })
             }
@@ -366,6 +371,9 @@ const updateProduct = async function (req, res) {
         return res.status(500).send({ status: false, message: error.message });
     }
 };
+
+
+//************ Delete Product *******************/
 
 const deleteProduct = async function (req, res) {
 
