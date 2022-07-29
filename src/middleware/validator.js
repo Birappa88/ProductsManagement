@@ -16,7 +16,7 @@ const isValidObjectId = function (objectId) {
 const validFileRegex =
   /^.+\.(?:(?:[dD][oO][cC][xX]?)|(?:[pP][dD][fF])|(?:[pP][nN][gG])|(?:[jJ][pP][gG]))$/;
 
-const stringRegex = /^[a-zA-Z0-9 ]{2,30}$/; 
+const stringRegex = /^[a-zA-Z0-9, ]{2,30}$/; 
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$/;
 const phoneRegex = /^((\+91)?|91)?[6789][0-9]{9}$/;
 const pincodeRegex = /^[0-9]{6}$/;

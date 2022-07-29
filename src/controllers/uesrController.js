@@ -8,7 +8,7 @@ const {
   isValidRequestBody,
   isValidObjectId,
   validFileRegex,
-  nameRegex,
+  stringRegex,
   passwordRegex,
   phoneRegex,
   pincodeRegex,
@@ -106,12 +106,12 @@ const createUser = async function (req, res) {
         .send({ status: false, message: "Enter the valid pincode" });
     }
 
-    if (!nameRegex.test(fname)) {
+    if (!stringRegex.test(fname)) {
       return res
         .status(400)
         .send({ status: false, message: "plz enter  the valid fname" });
     }
-    if (!nameRegex.test(lname)) {
+    if (!stringRegex.test(lname)) {
       return res
         .status(400)
         .send({ status: false, message: "plz enter  the valid lname" });
@@ -180,7 +180,7 @@ const loginUser = async function (req, res) {
     let body = req.body;
     const { email, password } = body;
 
-    if (!isValidRequestBody(body)) {
+    if (!isValidRequestBody(body)) { 
       return res
         .status(400)
         .send({ status: false, message: "Insert Data : BAD REQUEST" });
@@ -296,14 +296,14 @@ const updateUser = async function (req, res) {
       }
     }
     if (fname) {
-      if (!nameRegex.test(fname)) {
+      if (!stringRegex.test(fname)) {
         return res
           .status(400)
           .send({ status: false, message: "plz enter  the valid fname" });
       }
     }
     if (lname) {
-      if (!nameRegex.test(lname)) {
+      if (!stringRegex.test(lname)) {
         return res
           .status(400)
           .send({ status: false, message: "plz enter  the valid lname" });
