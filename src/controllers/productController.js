@@ -371,7 +371,7 @@ const updateProduct = async function (req, res) {
         }
 
         if (installments != null) {
-            if (!/^[+]?([0-9]+\.?[0-9]*|\.[0-9]+)$/.test(price)) {
+            if (!/^[+]?([0-9]+\.?[0-9]*|\.[0-9]+)$/.test(installments)) {
                 return res.status(400).send({ status: false, message: `Enter valid installments` })
             }
         }
