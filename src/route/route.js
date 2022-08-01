@@ -12,7 +12,7 @@ router.post("/login",loginUser);
 router.get("/user/:userId/profile",authentication, authorization, getUser);
 router.put("/user/:userId/profile",authentication,authorization,updateUser)
 
-//Feature 2 User ApIs 
+//Feature 2 Product ApIs 
 router.post("/products",createProduct);
 router.get("/products",getfilterProduct);
 router.get("/products/:productId",getProduct);
