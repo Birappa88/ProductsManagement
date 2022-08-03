@@ -2,6 +2,7 @@ const express = require("express");
 const { createUser,loginUser, getUser, updateUser} = require("../controllers/uesrController");
 const { createProduct,getfilterProduct, getProduct, updateProduct, deleteProduct} = require("../controllers/productController");
 const { addToCart, upadateCart, getCart, deleteCart} = require("../controllers/cartController");
+const { createOrder, updateOrder} = require("../controllers/orderController");
 const { authorization,authentication } = require("../middleware/Authentication");
 
 const router = express.Router();
@@ -22,8 +23,12 @@ router.delete("/products/:productId",deleteProduct);
 
 //-------(Feature 3 :=> Cart ApIs)----------//
 router.post("/users/:userId/cart", addToCart)
-router.put("/users/:userId/cart", upadateCart)
-router.get("/users/:userId/cart", getCart)
-router.delete("/users/:userId/cart", deleteCart)
+router.put("/users/:userId/cart",authentication, authorization, upadateCart)
+router.get("/users/:userId/cart",authentication, authorization, getCart)
+router.delete("/users/:userId/cart", authentication, authorization,deleteCart)
+
+//-------(Feature 4 :=> Order ApIs)----------//
+router.post("/users/:userId/orders", createOrder)
+router.put("/users/:userId/orders", updateOrder)
 
 module.exports =router;

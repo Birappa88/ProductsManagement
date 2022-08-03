@@ -49,7 +49,7 @@ const addToCart = async (req, res) => {
             if (!isValidObjectId(cartId)) {
                 return res.status(400).send({ status: false, message: "Enter valid CartId" })
             }
-            const cartExist = await cartModel.findOne({ _id: cartId, isDeleted: false })
+            const cartExist = await cartModel.findOne({ _id: cartId })
             if (!cartExist) {
                 return res.status(404).send({ status: false, message: "Cart is not found with this CartId" })
             }
@@ -62,7 +62,6 @@ const addToCart = async (req, res) => {
                     let quanty = parseInt(Quantity)
                     cartExist.items[i].quantity = cartExist.items[i].quantity + quanty
 
-                    console.log(cartExist.items[i].quantity)
                     cartExist.totalPrice = checkUser.totalPrice + (Quantity * productExist.price)
                     cartExist.save()
                     return res.status(200).send({ status: true, message: "Product Quantity is added to Cart Successfully", data: cartExist })
@@ -109,11 +108,10 @@ const upadateCart = async (req, res) => {
         if (!productExist) {
             return res.status(404).send({ status: false, message: "Product is not found with this ProductId" })
         }
-
         if (!isValidObjectId(CartId)) {
             return res.status(400).send({ status: false, message: "Enter valid CartId" })
         }
-        const cartExist = await cartModel.findOne({ _id: CartId, isDeleted: false })
+        const cartExist = await cartModel.findOne({ _id: CartId })
         if (!cartExist) {
             return res.status(404).send({ status: false, message: "CartId is not found with this CartId" })
         }
@@ -130,7 +128,7 @@ const upadateCart = async (req, res) => {
         }
         for (let i = 0; i < cartExist.items.length; i++) {
 
-            if (`${cartExist.items[i].productId}` == `${productExist._id}`) {
+            if (`${cartExist.items[i].productId}` == `${ProductId}`) {
 
                 if (RemoveProduct == 1 && cartExist.items[i].quantity > 1) {
                     cartExist.items[i].quantity = (cartExist.items[i].quantity - 1)
@@ -144,7 +142,7 @@ const upadateCart = async (req, res) => {
                 }
                 else {
                     const updatedCart = await cartModel.findOneAndUpdate({ _id: CartId }, { $pull: { items: { productId: ProductId } }, $inc: { totalItems: -1, totalPrice: -(productExist.price * cartExist.items[i].quantity) } }, { new: true })
-                    return res.status(200).send({ status: true, message: `${ProductId} is removed`, data: updatedCart })
+                    return res.status(200).send({ status: true, message: `${productExist.title} is removed`, data: updatedCart })
                 }
             }
         }
@@ -158,7 +156,17 @@ const upadateCart = async (req, res) => {
 const getCart = async (req, res) => {
     try {
         const UserId = req.params.userId
+
+        const userExist = await userModel.findOne({ _id: UserId, isDeleted: false })
+        if (!userExist) {
+            return res.status(404).send({ status: false, message: "User is not found with this UserId" })
+        }
+
         const getCart = await cartModel.findOne({ userId: UserId })
+        if (!getCart) {
+            return res.status(404).send({ status: false, message: "Cart is not found with this UserId" })
+        }
+
         return res.status(200).send({ status: true, message: "Get the Cart Details", data: getCart })
 
     } catch (err) {
@@ -169,7 +177,16 @@ const getCart = async (req, res) => {
 const deleteCart = async (req, res) => {
     const UserId = req.params.userId
 
+    const userExist = await userModel.findOne({ _id: UserId, isDeleted: false })
+    if (!userExist) {
+        return res.status(404).send({ status: false, message: "User is not found with this UserId" })
+    }
+
     const deletedCart = await cartModel.findOneAndUpdate({ userId: UserId }, { items: [], totalItems: 0, totalPrice: 0 }, { new: true })
+    if (!deletedCart) {
+        return res.status(404).send({ status: false, message: "Cart is not found with this UserId" })
+    }
+
     return res.status(204).send({ status: true, message: "Delete the Cart Items", data: deletedCart })
 }
 
