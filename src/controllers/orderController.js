@@ -100,9 +100,9 @@ const updateOrder = async (req, res) => {
         }
 
         if (!isValidObjectId(OrderId)) {
-            return res.status(400).send({ status: false, message: "Enter valid OrderId" })
+            return res.status(400).send({ status: false, message: "Enter valid OrderId." })
         }
-        const orderedUser = await orderModel.findOne({ _id: OrderId })
+        const orderedUser = await orderModel.findOne({ _id: OrderId })  
         if (!orderedUser) {
             return res.status(404).send({ status: false, message: "Your Order is not found with this OrderId" })
         }
@@ -130,7 +130,7 @@ const updateOrder = async (req, res) => {
     }
 }
 
-// const
+
 module.exports = {
     createOrder,
     updateOrder
