@@ -55,11 +55,6 @@ const createOrder = async (req, res) => {
         }
         data.totalQuantity = TotalQuantity
 
-        if (data.status != null) {
-            if (['pending', 'completed', 'cancelled'].indexOf(data.status.trim().toLowerCase()) == -1) {
-                return res.status(400).send({ status: false, message: "Status must be either 'pending', 'completed' or 'cancelled']" })
-            }
-        }
         if (data.cancellable != null) {
             data.cancellable = JSON.parse(data.cancellable)
             if (typeof (data.cancellable) != "boolean") {
@@ -73,7 +68,10 @@ const createOrder = async (req, res) => {
 
         const createdOrder = await orderModel.create(data)
 
+        await cartModel.findOneAndUpdate({_id: CartId },{ items: [], totalItems: 0, totalPrice: 0 }, { new: true })
+
         return res.status(201).send({ status: true, message: "Your Order is created Successfully", data: createdOrder })
+   
     } catch (err) {
         return res.status(500).send({ status: false, message: err.message })
     }
@@ -121,6 +119,9 @@ const updateOrder = async (req, res) => {
             else {
                 return res.status(400).send({ status: false, message: "Your order can't be cancelled" })
             }
+        }
+        if (orderedUser.status == "cancelled" ) {
+            return res.status(400).send({ status: false, message: "Your order can't be update, its already cancelled" })
         }
         const updateOrder = await orderModel.findOneAndUpdate({ _id: OrderId }, data, { new: true })
         return res.status(200).send({ status: true, message: "Your Order is Updated", data: updateOrder })

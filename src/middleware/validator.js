@@ -13,24 +13,39 @@ const isValidRequestBody = function (requestBody) {
 const isValidObjectId = function (objectId) {
   return mongoose.Types.ObjectId.isValid(objectId);
 };
+const isValidSize = function (size) {
+  const validSize = size.split(",").map(x => x.toUpperCase().trim())
+  let uniqueValidSize = validSize.filter((item,
+    index) => validSize.indexOf(item) === index);
 
-const validFileRegex =  /^.+\.(?:(?:[dD][oO][cC][xX]?)|(?:[pP][dD][fF])|(?:[pP][nN][gG])|(?:[jJ][pP][gG]))$/;
+  let sizes = ["S", "XS", "M", "X", "L", "XXL", "XL"]
 
-const stringRegex =     /^[a-zA-Z0-9, ]{2,30}$/; 
+  for (let i = 0; i < validSize.length; i++) {
+    if (!sizes.includes(validSize[i])) {
+      return false
+    }
+  }
 
-const passwordRegex =   /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$/;
+  return uniqueValidSize
+}
+const validFileRegex = /^.+\.(?:(?:[dD][oO][cC][xX]?)|(?:[pP][dD][fF])|(?:[pP][nN][gG])|(?:[jJ][pP][gG]))$/;
 
-const phoneRegex =      /^((\+91)?|91)?[6789][0-9]{9}$/;
+const stringRegex = /^[a-zA-Z0-9, ]{2,30}$/;
 
-const pincodeRegex =    /^[0-9]{6}$/;
+const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$/;
 
-const emailRegex =      /^[a-z0-9][a-z0-9-_\.]+@([a-z]|[a-z0-9]?[a-z0-9-]+[a-z0-9])\.[a-z0-9]{2,10}(?:\.[a-z]{2,10})?$/;
+const phoneRegex = /^((\+91)?|91)?[6789][0-9]{9}$/;
+
+const pincodeRegex = /^[1-9]{1}?[0-9]{5}$/;
+
+const emailRegex = /^[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,4}$/;
 
 
 module.exports = {
   isValid,
   isValidObjectId,
   isValidRequestBody,
+  isValidSize,
   validFileRegex,
   stringRegex,
   passwordRegex,

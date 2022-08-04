@@ -47,12 +47,12 @@ const authorization = async function (req, res, next) {
     }
 
     const user = await userModel.findById(userId );
-
     if (!user) {
       return res.status(404).send({ status: false, message: "User not found with this id" });
     }
+
     if (req.useId != userId) {
-      return res.status(401).send({ status: false, message: "Not authorised" });
+      return res.status(401).send({ status: false, message: "Not Authorised" });
     }
     console.log("Authorization successful");
 

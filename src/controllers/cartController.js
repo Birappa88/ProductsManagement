@@ -40,6 +40,7 @@ const addToCart = async (req, res) => {
             data.totalItems = 1
 
             const createCart = await cartModel.create(data)
+
             return res.status(201).send({ status: true, message: "Cart is created successfully", data: createCart })
         }
         else {
@@ -126,6 +127,7 @@ const upadateCart = async (req, res) => {
         if (cartExist.items.length == 0) {
             return res.status(400).send({ status: false, message: "Items are removed" })
         }
+
         for (let i = 0; i < cartExist.items.length; i++) {
 
             if (`${cartExist.items[i].productId}` == `${ProductId}`) {
@@ -138,7 +140,6 @@ const upadateCart = async (req, res) => {
                     updatedCart.items = cartExist.items
 
                     return res.status(200).send({ status: true, message: "Product quantity is Decremented", data: updatedCart })
-
                 }
                 else {
                     const updatedCart = await cartModel.findOneAndUpdate({ _id: CartId }, { $pull: { items: { productId: ProductId } }, $inc: { totalItems: -1, totalPrice: -(productExist.price * cartExist.items[i].quantity) } }, { new: true })
@@ -187,7 +188,7 @@ const deleteCart = async (req, res) => {
         return res.status(404).send({ status: false, message: "Cart is not found with this UserId" })
     }
 
-    return res.status(204).send({ status: true, message: "Delete the Cart Items", data: deletedCart })
+    return res.status(204).send({ status: true, message: "Deleted the Cart Items", data: deletedCart })
 }
 
 

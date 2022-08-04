@@ -4,6 +4,7 @@ const {
     isValid,
     isValidRequestBody,
     isValidObjectId,
+    isValidSize,
     stringRegex,
 } = require("../middleware/validator");
 
@@ -179,22 +180,22 @@ const getfilterProduct = async (req, res) => {
                 }
                 filter.price = { $lt: `${priceLessThan}` };
             }
+            
+            // if (size) {
+            //     let sizes = size.toUpperCase().split(",");
+            //     let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"];
 
-            if (size) {
-                let sizes = size.toUpperCase().split(",");
-                let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"];
-
-                if (sizes.some((x) => arr.includes(x.trim()))) {
-                    filter.size = { $in: `${sizes}` };
-                } else {
-                    return res
-                        .status(400)
-                        .send({
-                            status: false,
-                            message: `Available sizes must be out of ${arr}`,
-                        });
-                }
-            }
+            //     if (sizes.some((x) => arr.includes(x.trim()))) {
+            //         filter.size = { $in: `${sizes}` };
+            //     } else {
+            //         return res
+            //             .status(400)
+            //             .send({
+            //                 status: false,
+            //                 message: `Available sizes must be out of ${arr}`,
+            //             });
+            //     }
+            // }
             if (req.query.priceSort) {
                 if ((req.query.priceSort != -1 && req.query.priceSort != 1)) {
                     return res
@@ -229,6 +230,7 @@ const getfilterProduct = async (req, res) => {
                     })
                     .sort({ price: req.query.priceSort });
 
+                    
                 if (productList.length == 0) {
                     return res
                         .status(404)
@@ -237,6 +239,18 @@ const getfilterProduct = async (req, res) => {
                 return res
                     .status(200)
                     .send({ status: true, message: `Total ${productList.length} Products Found succesfully`, data: productList });
+            }
+            
+
+            if (!isValid(size)) {
+                return res.status(400).send({ status: false, message: "availableSizes is required" })
+            }
+            if (size) {
+                if (Array.isArray(isValidSize(size))) {
+                    data.size = isValidSize(size)
+                } else {
+                    return res.status(400).send({ status: false, message: `size should be one these only ${["S", "XS", "M", "X", "L", "XXL", "XL"]}` })
+                }
             }
             if (priceGreaterThan || priceLessThan) {
                 let productList = await productModel
@@ -265,7 +279,7 @@ const getfilterProduct = async (req, res) => {
 const getProduct = async function (req, res) {
     try {
         const productId = req.params.productId;
-        
+
         if (!isValidObjectId(productId)) {
             return res
                 .status(400)
@@ -412,8 +426,11 @@ const deleteProduct = async function (req, res) {
                 .send({ status: false, message: "ProductId is not correct" });
         }
 
-        let Product = await productModel.findOne({ _id: ProductId, isDeleted: false })
+        let Product = await productModel.findOne({ _id: ProductId})
         if (!Product) { return res.status(404).send({ status: false, message: "Product not found" }) }
+
+        let Product1 = await productModel.findOne({ _id: ProductId, isDeleted: false })
+        if (!Product1) { return res.status(404).send({ status: false, message: "Product is already Deleted" }) }
 
         let date = new Date()
         let check = await productModel.findOneAndUpdate({ _id: ProductId }, { isDeleted: true, deletedAt: date }, { new: true })

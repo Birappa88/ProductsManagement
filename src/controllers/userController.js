@@ -36,28 +36,28 @@ const createUser = async function (req, res) {
       return res
         .status(400)
         .send({ status: false, message: "Enter valid firstName" });
-    }   
-    
+    }
+
     if (!isValid(lname)) {
       return res
-      .status(400)
-      .send({ status: false, message: "Enter valid lastName" });
+        .status(400)
+        .send({ status: false, message: "Enter valid lastName" });
     }
     if (!stringRegex.test(lname)) {
       return res
-      .status(400)
-      .send({ status: false, message: "Enter valid lastName" });
+        .status(400)
+        .send({ status: false, message: "Enter valid lastName" });
     }
 
     if (!isValid(email)) {
       return res
-      .status(400)
-      .send({ status: false, message: "Enter Email" });
+        .status(400)
+        .send({ status: false, message: "Enter Email" });
     }
     if (!emailRegex.test(email)) {
       return res
-      .status(400)
-      .send({ status: false, message: "Enter valid Email" });
+        .status(400)
+        .send({ status: false, message: "Enter valid Email" });
     }
     let checkEmail = await userModel.findOne({ email: email });
     if (checkEmail) {
@@ -71,25 +71,25 @@ const createUser = async function (req, res) {
       return res
         .status(400)
         .send({ status: false, message: "Enter password" });
-    }   
+    }
     if (!passwordRegex.test(password)) {
       return res
-      .status(400)
-      .send({ status: false, message: "Enter valid password" });
-    }   
+        .status(400)
+        .send({ status: false, message: "Enter valid password" });
+    }
     let securePassword = body.password;
     const encrytedpassword = async function (securePassword) {
       const passwordHash = await bcrypt.hash(securePassword, 10);
       body.password = passwordHash;
     };
     encrytedpassword(securePassword);
-    
+
     if (!isValid(phone)) {
       return res
-      .status(400)
-      .send({ status: false, message: "Enter Phone number" });
+        .status(400)
+        .send({ status: false, message: "Enter Phone number" });
     }
-    if (!phoneRegex.test(phone)) {
+    if (!phoneRegex.test(phone.trim())) {
       return res.status(400).send({
         status: false,
         message: `${phone} is not valid Phone number`,
@@ -103,15 +103,25 @@ const createUser = async function (req, res) {
       });
     }
 
+    if (!address) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Enter address" });
+    }
     const passAddress = JSON.parse(body.address);
     address = passAddress;
     body.address = address;
-    
+
     if (!isValid(address)) {
       return res
-      .status(400)
-        .send({ status: false, message: "Enter address" });
-    }   
+        .status(400)
+        .send({ status: false, message: "Enter Valid address" });
+    }
+    if (!address.shipping) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Enter Shpping Address" });
+    }
     if (!isValid(address.shipping)) {
       return res
         .status(400)
@@ -122,9 +132,20 @@ const createUser = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Enter street" });
     }
+    if (!isValid(address.shipping.street)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Provide shipping Street" });
+    }
     if (!address.shipping.city) {
       return res.status(400).send({ status: false, message: "Enter city" });
     }
+    if (!isValid(address.shipping.city)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Provide shipping city" });
+    }
+
     if (!address.shipping.pincode) {
       return res
         .status(400)
@@ -133,32 +154,47 @@ const createUser = async function (req, res) {
     if (!pincodeRegex.test(address.shipping.pincode)) {
       return res
         .status(400)
-        .send({ status: false, message: "Enter valid pincode" });
+        .send({ status: false, message: "Enter valid shipping pincode" });
+    }
+    if (!address.billing) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Enter Billing Address" });
     }
     if (!isValid(address.billing)) {
       return res
         .status(400)
-        .send({ status: false, message: "Provide billing address" });
+        .send({ status: false, message: "Provide  valid billing address" });
     }
     if (!address.billing.street) {
       return res
         .status(400)
-        .send({ status: false, message: "Enter valid street" });
+        .send({ status: false, message: "Enter billing street" });
+    }
+    if (!isValid(address.billing.street)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Provide valid billing Street" });
     }
     if (!address.billing.city) {
       return res
         .status(400)
-        .send({ status: false, message: "Enter valid city" });
+        .send({ status: false, message: "Enter Billing city" });
+    }
+    if (!isValid(address.billing.city)) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Provide valid billing city" });
     }
     if (!address.billing.pincode) {
       return res
         .status(400)
-        .send({ status: false, message: "Enter valid pincode" });
+        .send({ status: false, message: "Enter billing pincode" });
     }
     if (!pincodeRegex.test(address.billing.pincode)) {
       return res
         .status(400)
-        .send({ status: false, message: "Enter valid pincode" });
+        .send({ status: false, message: "Enter valid billing pincode" });
     }
 
     let files = req.files;
@@ -250,7 +286,7 @@ const loginUser = async function (req, res) {
 
     res.status(200).send({
       status: true,
-      message: "login Successful",
+      message: "User login Successful",
       data: { userId: user._id, token: token },
     });
 
@@ -281,6 +317,11 @@ const getUser = async function (req, res) {
         message: `User not found with this ${userId} id`,
       });
     }
+
+    if (req.useId != userId) {
+      return res.status(401).send({ status: false, message: "you are not authenticated User" });
+    }
+
     return res
       .status(200)
       .send({ status: true, message: "User profile details", data: user });
@@ -296,35 +337,48 @@ const getUser = async function (req, res) {
 const updateUser = async function (req, res) {
   try {
     let data = req.body;
+    let UserId = req.params.userId
 
     if (!isValidRequestBody(data)) {
-      return res.status(400).send({ status: false, message: "Enter data to update user details" });
+      return res
+        .status(400)
+        .send({ status: false, message: "Enter data to create User" });
     }
-    let { fname, lname, email, password, phone, profileImage } = data;
 
-    if (profileImage) {
-      const files = req.files;
-      let profileImage;
-      if (isValidFiles(files)) {
-        const profilePicture = await uploadFile(files[0]);
-        profileImage = profilePicture;
+    let { fname, lname, email, password, phone, profileImage, address } = data;
+
+    if (fname != null) {
+      if (!isValid(fname)) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Enter valid firstName" });
       }
-    }
-    if (fname) {
       if (!stringRegex.test(fname)) {
         return res
           .status(400)
           .send({ status: false, message: "Enter valid firstName" });
       }
     }
-    if (lname) {
+
+    if (lname != null) {
+      if (!isValid(lname)) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Enter valid lastName" });
+      }
       if (!stringRegex.test(lname)) {
         return res
           .status(400)
           .send({ status: false, message: "Enter valid lastName" });
       }
     }
-    if (email) {
+    if (email != null) {
+
+      if (!isValid(email)) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Enter Email" });
+      }
       if (!emailRegex.test(email)) {
         return res
           .status(400)
@@ -338,8 +392,13 @@ const updateUser = async function (req, res) {
         message: `${email} already exists, use the different Email `,
       });
     }
-    if (phone) {
-      if (!phoneRegex.test(phone)) {
+    if (phone != null) {
+      if (!isValid(phone)) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Enter Phone number" });
+      }
+      if (!phoneRegex.test(phone.trim())) {
         return res.status(400).send({
           status: false,
           message: `${phone} is not valid Phone number`,
@@ -353,7 +412,12 @@ const updateUser = async function (req, res) {
         });
       }
     }
-    if (password) {
+    if (password != null) {
+      if (!isValid(password)) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Enter password" });
+      }
       if (!passwordRegex.test(password)) {
         return res.status(400).send({
           status: false,
@@ -363,9 +427,14 @@ const updateUser = async function (req, res) {
       password = await bcrypt.hash(password, 10);
     }
 
-    if (data.address) {
-      const address = JSON.parse(data.address);
-      data.address = address;
+
+    if (address != null) {
+      address = JSON.parse(address);
+      if (!isValid(address)) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Enter address" });
+      }
       const shipping = address.shipping;
       if (shipping) {
         if (shipping.pincode) {
@@ -376,55 +445,62 @@ const updateUser = async function (req, res) {
             });
         }
       }
-    }
-    const billing = address.billing;
-    if (billing) {
-      if (billing.pincode) {
-        if (!pincodeRegex.test(billing.pincode)) {
-          return res.status(400).send({
-            status: false,
-            message: `Enter valid billing pincode`,
-          });
+
+      const billing = address.billing;
+      if (billing) {
+        if (billing.pincode) {
+          if (!pincodeRegex.test(billing.pincode)) {
+            return res.status(400).send({
+              status: false,
+              message: `Enter valid billing pincode`,
+            });
+          }
         }
       }
     }
 
-    const newData = { fname, lname, email, phone, password, profileImage };
+    const newData = { fname, lname, email, phone, password, address};
 
     const updatedUser = await userModel.findOneAndUpdate(
-      { _id: req.userId },
+      { _id: UserId },
       newData,
       { new: true }
     );
+    // if (address) {
+    //   const shipping = data.address.shipping;
+    //   if (shipping) {
+    //     if (shipping.street) {
+    //       updateUser.address.shipping.street = shipping.street;
+    //     }
+    //     if (shipping.city) {
+    //       updateUser.address.shipping.city = shipping.city;
+    //     }
+    //     if (shipping.pincode) {
+    //       updateUser.address.shipping.pincode = shipping.pincode;
+    //     }
+    //   }
+    //   const billing = data.address.billing;
+    //   if (billing) {
+    //     if (billing.street) {
+    //       updateUser.address.billing.street = billing.street;
+    //     }
+    //     if (billing.city) {
+    //       updateUser.address.billing.city = billing.city;
+    //     }
+    //     if (billing.pincode) {
+    //       updateUser.address.billing.pincode = billing.pincode
+    //     }
+    //   }
+    // }
 
-    if (data.address) {
-      const shipping = data.address.shipping;
-      if (shipping) {
-        if (shipping.street) {
-          updateUser.address.shipping.street = shipping.street;
-        }
-        if (shipping.city) {
-          updateUser.address.shipping.city = shipping.city;
-        }
-        if (shipping.pincode) {
-          updateUser.address.shipping.pincode = shipping.pincode;
-        }
-      }
-      const billing = data.address.billing;
-      if (billing) {
-        if (billing.street) {
-          updateUser.address.billing.street = billing.street;
-        }
-        if (billing.city) {
-          updateUser.address.billing.city = billing.city;
-        }
-        if (billing.pincode) {
-          updateUser.address.billing.pincode = billing.pincode
-        }
-      }
+    let files = req.files 
+    if (files.length > 0) {
+      const profilePicture = await uploadFile(files[0]);
+      updatedUser.profileImage = profilePicture
     }
 
     updatedUser.save();
+
     return res
       .status(200)
       .send({ status: true, message: "User details updated successfully", data: updatedUser });
