@@ -1,3 +1,5 @@
+//=======================----------------->{ Imports }<-------------=======================================//
+
 const   express = require("express");
 const { createUser,loginUser, getUser, updateUser} = require("../controllers/userController");
 const { createProduct,getfilterProduct, getProduct, updateProduct, deleteProduct} = require("../controllers/productController");
@@ -7,6 +9,7 @@ const { authorization,authentication } = require("../middleware/Authentication")
 
 const router = express.Router();
 
+//=======================----------------->{ Apis }<-------------=======================================//
 
 //------->{ Feature 1 :=> USER ApIs }<----------//
 router.post("/register",createUser);
@@ -31,4 +34,10 @@ router.delete("/users/:userId/cart", authentication, authorization,deleteCart)
 router.post("/users/:userId/orders", createOrder)
 router.put ("/users/:userId/orders",updateOrder)
 
+
+//=======================----------------->{ Export }<-------------=======================================//
+
 module.exports =router;
+
+
+/***********+++++*********+++++++++**********+++++++***********++++++++*******+++++++++*********++++++***********/

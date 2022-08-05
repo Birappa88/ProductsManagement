@@ -1,10 +1,16 @@
+//=======================----------------->{ Imports }<-------------=======================================//
+
 const aws = require('aws-sdk')
+
+//=======================----------------->{ AWS connection }<--------=======================================//
 
 aws.config.update({
     accessKeyId: "AKIAY3L35MCRVFM24Q7U",
     secretAccessKey: "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",
     region: "ap-south-1",
 });
+
+//=======================----------------->{ Upload File to S3 }<--------=======================================//
 
 let uploadFile = async (file) => {
     return new Promise(function (resolve, reject) {
@@ -17,7 +23,7 @@ let uploadFile = async (file) => {
             Key: "abc/" + file.originalname,  
             Body: file.buffer
         }
-
+        
         s3.upload(uploadParams, function (err, data) {
             if (err) {
                 return reject({ "error": err })
@@ -27,4 +33,9 @@ let uploadFile = async (file) => {
     })
 }
 
+//=======================----------------->{ Export }<--------=======================================//
+
 module.exports = { uploadFile };
+
+
+/**********++++++*********+++++++++************++++++++++***********++++++++*******+++++++++*********++++++***********/
