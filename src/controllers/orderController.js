@@ -111,19 +111,20 @@ const updateOrder = async (req, res) => {
             return res.status(400).send({ status: false, message: "Status must be either 'pending', 'completed' or 'cancelled']" })
         }
 
+        if (orderedUser.status == "cancelled" ) {
+            return res.status(400).send({ status: false, message: "Your order cannot be updated, it has already been cancelled" })
+        }
         if (data.status == "cancelled") {
             if (orderedUser.cancellable) {
                 const updateOrder = await orderModel.findOneAndUpdate({ _id: OrderId }, data, { new: true })
                 return res.status(200).send({ status: true, message: "Your Order is Cancelled", data: updateOrder })
             }
             else {
-                return res.status(400).send({ status: false, message: "Your order can't be cancelled" })
+                return res.status(400).send({ status: false, message: "Your order is not cancellable" })
             }
         }
-        if (orderedUser.status == "cancelled" ) {
-            return res.status(400).send({ status: false, message: "Your order can't be update, its already cancelled" })
-        }
         const updateOrder = await orderModel.findOneAndUpdate({ _id: OrderId }, data, { new: true })
+       
         return res.status(200).send({ status: true, message: "Your Order is Updated", data: updateOrder })
 
     } catch (err) {

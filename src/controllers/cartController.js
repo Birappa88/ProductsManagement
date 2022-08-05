@@ -6,6 +6,7 @@ const {
     isValidObjectId,
 } = require("../middleware/validator");
 
+
 const addToCart = async (req, res) => {
     try {
         const userId = req.params.userId
@@ -30,7 +31,9 @@ const addToCart = async (req, res) => {
         if (!productExist) {
             return res.status(404).send({ status: false, message: "Product is not found with this ProductId" })
         }
+
         const checkUser = await cartModel.findOne({ userId: userId })
+
         if (!checkUser) {
             if (cartId) {
                 return res.status(400).send({ status: false, message: "User is new, let's create cart first" })
@@ -78,12 +81,12 @@ const addToCart = async (req, res) => {
             const addedProduct = await cartModel.findOneAndUpdate({ _id: cartId }, updatedCart, { new: true })
             return res.status(200).send({ status: true, message: "Product is added to Cart Successfully", data: addedProduct })
         }
-
     }
     catch (err) {
         return res.status(500).send({ status: false, message: err.message })
     }
 }
+
 
 const upadateCart = async (req, res) => {
     try {
@@ -147,12 +150,13 @@ const upadateCart = async (req, res) => {
                 }
             }
         }
-        return res.status(400).send({ status: false, message: "Product does not found, its deleted" })
+        return res.status(400).send({ status: false, message: "Product not found, may have been removed from cart" })
 
     } catch (err) {
         return res.status(500).send({ status: false, message: err.message })
     }
 }
+
 
 const getCart = async (req, res) => {
     try {
@@ -163,7 +167,8 @@ const getCart = async (req, res) => {
             return res.status(404).send({ status: false, message: "User is not found with this UserId" })
         }
 
-        const getCart = await cartModel.findOne({ userId: UserId })
+        const getCart = await cartModel.findOne({ userId: UserId }).populate({ path: "items.productId", select: { createdAt: 0, updatedAt: 0, __v: 0 } })
+
         if (!getCart) {
             return res.status(404).send({ status: false, message: "Cart is not found with this UserId" })
         }
@@ -175,6 +180,7 @@ const getCart = async (req, res) => {
     }
 }
 
+
 const deleteCart = async (req, res) => {
     const UserId = req.params.userId
 
@@ -183,12 +189,22 @@ const deleteCart = async (req, res) => {
         return res.status(404).send({ status: false, message: "User is not found with this UserId" })
     }
 
-    const deletedCart = await cartModel.findOneAndUpdate({ userId: UserId }, { items: [], totalItems: 0, totalPrice: 0 }, { new: true })
-    if (!deletedCart) {
-        return res.status(404).send({ status: false, message: "Cart is not found with this UserId" })
+    const checkCart = await cartModel.findOne({ userId: UserId });
+
+    if (!checkCart) {
+        return res
+            .status(400)
+            .send({ status: false, message: "Cart is not found with this UserId" });
+    }
+    if (checkCart.items.length == 0) {
+        return res
+            .status(400)
+            .send({ status: false, message: "Cart is already empty" });
     }
 
-    return res.status(204).send({ status: true, message: "Deleted the Cart Items", data: deletedCart })
+    await cartModel.findOneAndUpdate({ userId: UserId }, { items: [], totalItems: 0, totalPrice: 0 }, { new: true })
+
+    return res.status(204).send({ status: true, message: "Deleted the Cart Items" })
 }
 
 

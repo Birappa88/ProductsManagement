@@ -6,7 +6,6 @@ const {
   isValid,
   isValidRequestBody,
   isValidObjectId,
-  validFileRegex,
   stringRegex,
   passwordRegex,
   phoneRegex,
@@ -345,7 +344,9 @@ const updateUser = async function (req, res) {
         .send({ status: false, message: "Enter data to create User" });
     }
 
-    let { fname, lname, email, password, phone, profileImage, address } = data;
+    let { fname, lname, email, password, phone, address } = data;
+
+    let newData = {}
 
     if (fname != null) {
       if (!isValid(fname)) {
@@ -358,6 +359,7 @@ const updateUser = async function (req, res) {
           .status(400)
           .send({ status: false, message: "Enter valid firstName" });
       }
+      newData["fname"] = fname
     }
 
     if (lname != null) {
@@ -371,9 +373,10 @@ const updateUser = async function (req, res) {
           .status(400)
           .send({ status: false, message: "Enter valid lastName" });
       }
+      newData["lname"] = lname
     }
-    if (email != null) {
 
+    if (email != null) {
       if (!isValid(email)) {
         return res
           .status(400)
@@ -384,14 +387,17 @@ const updateUser = async function (req, res) {
           .status(400)
           .send({ status: false, message: "Enter valid Email" });
       }
+
+      let checkEmail = await userModel.findOne({ email: email });
+      if (checkEmail) {
+        return res.status(400).send({
+          status: false,
+          message: `${email} already exists, use the different Email `,
+        });
+      }
+      newData["email"] = email
     }
-    let checkEmail = await userModel.findOne({ email: email });
-    if (checkEmail) {
-      return res.status(400).send({
-        status: false,
-        message: `${email} already exists, use the different Email `,
-      });
-    }
+
     if (phone != null) {
       if (!isValid(phone)) {
         return res
@@ -411,7 +417,9 @@ const updateUser = async function (req, res) {
           message: `${phone} already exists, use the new phone number`,
         });
       }
+      newData["phoen"] = phone
     }
+
     if (password != null) {
       if (!isValid(password)) {
         return res
@@ -425,75 +433,168 @@ const updateUser = async function (req, res) {
         });
       }
       password = await bcrypt.hash(password, 10);
+      newData["password"] = password
     }
 
-
-    if (address != null) {
+    if (address ) {
       address = JSON.parse(address);
       if (!isValid(address)) {
         return res
-          .status(400)
-          .send({ status: false, message: "Enter address" });
+        .status(400)
+        .send({ status: false, message: "Enter address" });
       }
-      const shipping = address.shipping;
-      if (shipping) {
-        if (shipping.pincode) {
-          if (!pincodeRegex.test(shipping.pincode))
-            return res.status(400).send({
-              status: false,
-              message: `Enter valid shipping pincode`,
-            });
-        }
+      
+      if (address.shipping != null) {
+      //   if (!isValid(address.shipping)) {
+      //     return res
+      //     .status(400)
+      //     .send({ status: false, message: "Enter address shipping" });
+      //   }
+      // }
+      if (address.shipping.street != null) {
+        // if (!isValid(address.shipping.street)) {
+          //   return res
+          //     .status(400)
+          //     .send({ status: false, message: "Enter address shipping street" });
+          // }
+          newData['address.shipping.street'] = address.shipping.street
+          JSON.parse(address.shipping.street)
+          console.log(newData)
       }
 
-      const billing = address.billing;
-      if (billing) {
-        if (billing.pincode) {
-          if (!pincodeRegex.test(billing.pincode)) {
-            return res.status(400).send({
-              status: false,
-              message: `Enter valid billing pincode`,
-            });
-          }
+      if (address.shipping.city != null) {
+        if (!isValid(address.shipping.city)) {
+          return res
+            .status(400)
+            .send({ status: false, message: "Enter address shipping city" });
         }
+        newData["address.shipping.city"] = address.shipping.city
+      }
+
+      if (address.shipping.pincode != null) {
+        if (!isValid(address.shipping.pincode)) {
+          return res
+            .status(400)
+            .send({ status: false, message: "Enter address shipping pincode" });
+        }
+        if (!pincodeRegex.test(shipping.pincode)) { 
+          return res.status(400).send({ status: false, message: `Enter valid shipping pincode` })
+         }
+        newData["address.shipping.pincode"] = address.shipping.pincode
       }
     }
 
-    const newData = { fname, lname, email, phone, password, address};
+      if (address.billing != null) {
+        if (!isValid(address.billing)) {
+          return res
+            .status(400)
+            .send({ status: false, message: "Enter address billing" });
+        }
+      }
+      if (address.billing.street != null) {
+        if (!isValid(address.billing.street)) {
+          return res
+            .status(400)
+            .send({ status: false, message: "Enter address billing street" });
+        }
+        newData["address.billing.street"] = address.billing.street
+      }
+
+      if (address.billing.city != null) {
+        if (!isValid(address.billing.city)) {
+          return res
+            .status(400)
+            .send({ status: false, message: "Enter address billing city" });
+        }
+        newData["address.billing.city"] = address.billing.city
+      }
+
+      if (address.billing.pincode != null) {
+        if (!isValid(address.billing.pincode)) {
+          return res
+            .status(400)
+            .send({ status: false, message: "Enter address billing pincode" });
+        }
+        if (!pincodeRegex.test(billing.pincode)) { 
+          return res.status(400).send({ status: false, message: `Enter valid billing pincode` })
+         }
+        newData["address.billing.pincode"] = address.billing.pincode
+      }
+    }
+
+    console.log(newData)
+      // const shipping = address.shipping;
+      // if (shipping) {
+      //   if (shipping.pincode) {
+      //     if (!pincodeRegex.test(shipping.pincode))
+      //       return res.status(400).send({
+      //         status: false,
+      //         message: `Enter valid shipping pincode`,
+      //       });
+      //   }
+      // }
+
+    //   const billing = address.billing;
+    //   if (billing) {
+    //     if (billing.pincode) {
+    //       if (!pincodeRegex.test(billing.pincode)) {
+    //         return res.status(400).send({
+    //           status: false,
+    //           message: `Enter valid billing pincode`,
+    //         });
+    //       }
+    //     }
+    //   }
+    // }
+
+    // console.log(typeof (address))
+
+    // const newData = {
+    //   fname, lname, email, phone, password,
+    //   address
+    // }
+
+
+    // const updateUser = {}
+
+    // if (address) {
+
+    //   const shipping = address.shipping;
+    //   if (shipping) {
+    //     if (shipping.street) {
+    //       address.shipping.street = shipping.street;
+    //       console.log(address.shipping.street)
+    //     }
+    //     if (shipping.city) {
+    //       shipping.city = shipping.city;
+    //     }
+    //     if (shipping.pincode) {
+    //       shipping.pincode = shipping.pincode;
+    //     }
+    //   }
+    //   const billing = address.billing;
+    //   if (billing) {
+    //     if (billing.street) {
+    //       address.billing.street = billing.street;
+    //     }
+    //     if (billing.city) {
+    //       address.billing.city = billing.city;
+    //     }
+    //     if (billing.pincode) {
+    //       address.billing.pincode = billing.pincode
+    //     }
+    //   }
+    // }
+    // updateUser.address = address
+    // console.log(updateUser)
 
     const updatedUser = await userModel.findOneAndUpdate(
       { _id: UserId },
       newData,
       { new: true }
-    );
-    // if (address) {
-    //   const shipping = data.address.shipping;
-    //   if (shipping) {
-    //     if (shipping.street) {
-    //       updateUser.address.shipping.street = shipping.street;
-    //     }
-    //     if (shipping.city) {
-    //       updateUser.address.shipping.city = shipping.city;
-    //     }
-    //     if (shipping.pincode) {
-    //       updateUser.address.shipping.pincode = shipping.pincode;
-    //     }
-    //   }
-    //   const billing = data.address.billing;
-    //   if (billing) {
-    //     if (billing.street) {
-    //       updateUser.address.billing.street = billing.street;
-    //     }
-    //     if (billing.city) {
-    //       updateUser.address.billing.city = billing.city;
-    //     }
-    //     if (billing.pincode) {
-    //       updateUser.address.billing.pincode = billing.pincode
-    //     }
-    //   }
-    // }
+    ); 
 
-    let files = req.files 
+    let files = req.files
     if (files.length > 0) {
       const profilePicture = await uploadFile(files[0]);
       updatedUser.profileImage = profilePicture
