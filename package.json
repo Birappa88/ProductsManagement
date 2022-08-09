@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Hyderali1921/E-Commerce.git"
+    "url": "git+https://github.com/Birappa88/ProductsManagement.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Hyderali1921/E-Commerce/issues"
+    "url": "https://github.com/Birappa88/ProductsManagement/issues"
   },
-  "homepage": "https://github.com/Hyderali1921/E-Commerce#readme",
+  "homepage": "https://github.com/Birappa88/ProductsManagement#readme",
   "dependencies": {
     "aws-sdk": "^2.1181.0",
     "bcrypt": "^5.0.1",
