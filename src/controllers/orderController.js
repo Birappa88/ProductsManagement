@@ -51,7 +51,7 @@ const createOrder = async (req, res) => {
 
         const userOrdered = await orderModel.findOne({ userId: UserId })
         if (userOrdered) {
-            return res.status(400).send({ status: false, message: "User has already placed an order" })
+            return res.status(400).send({ status: false, message: `Your Order is already placed, it's ${userOrdered.status}` })
         }
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
@@ -82,13 +82,15 @@ const createOrder = async (req, res) => {
         }
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const createdOrder = await orderModel.create(data)
+        await orderModel.create(data)
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
         await cartModel.findOneAndUpdate({ _id: CartId }, { items: [], totalItems: 0, totalPrice: 0 }, { new: true })
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        return res.status(201).send({ status: true, message: "Order is placed Successfully. Wait for your order to arrive", data: createdOrder })
+        const CreatedOrder = await orderModel.findOne({ userId: UserId }).populate({ path: 'items.productId', select: { 'title': 1, 'price': 1 } })
+
+        return res.status(201).send({ status: true, message: "Order is placed Successfully. Wait for your order to arrive", data: CreatedOrder })
 
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
@@ -148,13 +150,23 @@ const updateOrder = async (req, res) => {
         }
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
+        if (orderedUser.status == "completed") {
+            return res.status(400).send({ status: false, message: "Your order cannot be updated, it has already been completed" })
+        }
+        /*----------------------------------------------------------------------------------------------------------------------------*/
+
+        if (orderedUser.status == data.status) {
+            return res.status(400).send({ status: false, message: "Order is already pending" })
+        }
+        /*----------------------------------------------------------------------------------------------------------------------------*/
+
         if (data.status == "cancelled") {
 
             if (orderedUser.cancellable) {
 
-                const updateOrder = await orderModel.findOneAndUpdate({ _id: OrderId }, data, { new: true })
+                const updatedOrder = await orderModel.findOneAndUpdate({ _id: OrderId }, data, { new: true }).populate({ path: 'items.productId', select: { 'title': 1, 'price': 1 } })
 
-                return res.status(200).send({ status: true, message: "Your Order is Cancelled", data: updateOrder })
+                return res.status(200).send({ status: true, message: "Your Order is Cancelled", data: updatedOrder })
             }
             /*----------------------------------------------------------------------------------------------------------------------------*/
             else {
@@ -163,10 +175,10 @@ const updateOrder = async (req, res) => {
         }
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const updateOrder = await orderModel.findOneAndUpdate({ _id: OrderId }, data, { new: true })
+        const updatedOrder = await orderModel.findOneAndUpdate({ _id: OrderId }, data, { new: true }).populate({ path: 'items.productId', select: { 'title': 1, 'price': 1 } })
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        return res.status(200).send({ status: true, message: "Your Order is Updated", data: updateOrder })
+        return res.status(200).send({ status: true, message: "Your Order is Completed sucessfully", data: updatedOrder })
 
         /*----------------------------------------------------------------------------------------------------------------------------*/
 

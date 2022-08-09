@@ -18,7 +18,7 @@ const addToCart = async (req, res) => {
         const data = req.body
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const userExist = await userModel.findOne({ _id: userId, isDeleted: false })
+        const userExist = await userModel.findOne({ _id: userId })
         if (!userExist) {
             return res.status(404).send({ status: false, message: "User is not found with this UserId" })
         }
@@ -29,8 +29,8 @@ const addToCart = async (req, res) => {
         }
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const ProductId = data.items.productId
-        const Quantity = data.items.quantity
+        const ProductId = data.productId
+        const Quantity = data.quantity
         const cartId = data.cartId
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
@@ -45,6 +45,14 @@ const addToCart = async (req, res) => {
         }
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
+        if (!Quantity) {
+            return res.status(404).send({ status: false, message: "Enter Quantity of the Products" })
+        }
+        if (isNaN(Quantity)) {
+            return res.status(404).send({ status: false, message: "Enter Valid Quantity" })
+        }
+        /*----------------------------------------------------------------------------------------------------------------------------*/
+
         const checkUser = await cartModel.findOne({ userId: userId })
 
         if (!checkUser) {
@@ -53,14 +61,23 @@ const addToCart = async (req, res) => {
             }
             /*----------------------------------------------------------------------------------------------------------------------------*/
 
-            data.userId = userId
-            data.totalPrice = (productExist.price * Quantity)
-            data.totalItems = 1
+            let cartData = {
+                userId: userId,
+                items: [{
+                    productId: ProductId,
+                    quantity: Quantity
+                }],
+                totalPrice: (productExist.price * Quantity),
+                totalItems: 1
+            };
             /*----------------------------------------------------------------------------------------------------------------------------*/
-            const createCart = await cartModel.create(data)
+            
+            await cartModel.create(cartData)
+
+            const createdCart = await cartModel.findOne({ _id: cartId }).populate({ path: "items.productId", select: { title: 1, price: 1, availableSizes: 1 } })
             /*----------------------------------------------------------------------------------------------------------------------------*/
 
-            return res.status(201).send({ status: true, message: "Cart is created successfully", data: createCart })
+            return res.status(201).send({ status: true, message: "Cart is created successfully", data: createdCart })
             /*----------------------------------------------------------------------------------------------------------------------------*/
         }
         else {
@@ -88,9 +105,11 @@ const addToCart = async (req, res) => {
                     cartExist.items[i].quantity = cartExist.items[i].quantity + quanty
                     cartExist.totalPrice = checkUser.totalPrice + (Quantity * productExist.price)
                     cartExist.save()
+
+                    const addQuantity = await cartModel.findOne({ _id: cartId }).populate({ path: "items.productId", select: { title: 1, price: 1, availableSizes: 1 } })
                     /*----------------------------------------------------------------------------------------------------------------------------*/
 
-                    return res.status(200).send({ status: true, message: "Product Quantity is added to Cart Successfully", data: cartExist })
+                    return res.status(200).send({ status: true, message: "Product Quantity is added to Cart Successfully", data: addQuantity })
                 }
             }
             /*----------------------------------------------------------------------------------------------------------------------------*/
@@ -104,7 +123,7 @@ const addToCart = async (req, res) => {
 
             let updatedCart = { items: updatedItems, totalPrice: TotalPrice, totalItems: TotalItems }
 
-            const addedProduct = await cartModel.findOneAndUpdate({ _id: cartId }, updatedCart, { new: true })
+            const addedProduct = await cartModel.findOneAndUpdate({ _id: cartId }, updatedCart, { new: true }).populate({ path: "items.productId", select: { title: 1, price: 1, availableSizes: 1 } })
             /*----------------------------------------------------------------------------------------------------------------------------*/
 
             return res.status(200).send({ status: true, message: "Product is added to Cart Successfully", data: addedProduct })
@@ -126,7 +145,7 @@ const upadateCart = async (req, res) => {
         let data = req.body
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const userExist = await userModel.findOne({ _id: userId, isDeleted: false })
+        const userExist = await userModel.findOne({ _id: userId })
         if (!userExist) {
             return res.status(404).send({ status: false, message: "User is not found with this UserId" })
         }
@@ -154,7 +173,7 @@ const upadateCart = async (req, res) => {
         if (!isValidObjectId(CartId)) {
             return res.status(400).send({ status: false, message: "Enter valid CartId" })
         }
-        const cartExist = await cartModel.findOne({ _id: CartId })
+        const cartExist = await cartModel.findOne({ _id: CartId, userId: userId })
         if (!cartExist) {
             return res.status(404).send({ status: false, message: "CartId is not found with this CartId" })
         }
@@ -183,14 +202,16 @@ const upadateCart = async (req, res) => {
                     cartExist.save()
                     /*----------------------------------------------------------------------------------------------------------------------------*/
 
-                    const updatedCart = await cartModel.findOneAndUpdate({ _id: CartId },
+                    const updateCart = await cartModel.findOneAndUpdate({ _id: CartId },
                         {
                             $inc: { totalPrice: -(productExist.price) },
                             totalItems: cartExist.items.length
                         },
                         { new: true }).lean()
 
-                    updatedCart.items = cartExist.items
+                    updateCart.items = cartExist.items
+
+                    const updatedCart = await cartModel.findOne({ _id: CartId }).populate({ path: "items.productId", select: { title: 1, price: 1, availableSizes: 1 } })
                     /*----------------------------------------------------------------------------------------------------------------------------*/
 
                     return res.status(200).send({ status: true, message: "Product quantity is Decremented", data: updatedCart })
@@ -205,7 +226,7 @@ const upadateCart = async (req, res) => {
                             $inc: { totalItems: -1, totalPrice: -(productExist.price * cartExist.items[i].quantity) }
                         },
                         { new: true }
-                    )
+                    ).populate({ path: "items.productId", select: { title: 1, price: 1, availableSizes: 1 } })
                     /*----------------------------------------------------------------------------------------------------------------------------*/
 
                     return res.status(200).send({ status: true, message: `${productExist.title} is removed`, data: updatedCart })
@@ -239,7 +260,7 @@ const getCart = async (req, res) => {
         }
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const getCart = await cartModel.findOne({ userId: UserId }).populate({ path: "items.productId", select: { createdAt: 0, updatedAt: 0, __v: 0 } })
+        const getCart = await cartModel.findOne({ userId: UserId }).populate({ path: "items.productId", select: { title: 1, price: 1, availableSizes: 1 } })
 
         if (!getCart) {
             return res.status(404).send({ status: false, message: "Cart is not found with this UserId" })

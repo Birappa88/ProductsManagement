@@ -75,7 +75,7 @@ const createProduct = async (req, res) => {
                 .status(400)
                 .send({ status: false, message: "Enter Price of the Product" });
         }
-        if (!/^[+]?([0-9]+\.?[0-9]*|\.[0-9]+)$/.test(price)) {
+        if (isNaN(price)) {
             return res.status(400).send({ status: false, message: "Enter valid price " })
         }
         /*----------------------------------------------------------------------------------------------------------------------------*/
@@ -182,14 +182,11 @@ const getfilterProduct = async (req, res) => {
                 let sizes = size.toUpperCase().split(",")
                 let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
 
-                if (sizes.length > 1) {
-                    return res.status(400).send({ status: false, message: `Available size must be only one` })
-                }
                 if (sizes.some(x => !arr.includes(x.trim()))) {
                     return res.status(400).send({ status: false, message: `Available sizes must be out of ${arr}` })
                 }
-
-                filter.availableSizes = size.toUpperCase()
+            
+                filter.availableSizes = { $in: sizes }   
             }
             /*-------------------------------------------------------------------------------------------------------------*/
 
@@ -216,12 +213,13 @@ const getfilterProduct = async (req, res) => {
             }
             /*-------------------------------------------------------------------------------------------------------------*/
 
-            if (priceSort != -1 && priceSort != 1) {
-                return res
-                    .status(400)
-                    .send({ status: false, message: "Use 1 for Ascending or -1 for Descending Price lists" });
+            if (priceSort != null) {
+                if (priceSort != -1 && priceSort != 1) {
+                    return res
+                        .status(400)
+                        .send({ status: false, message: "Use 1 for Ascending or -1 for Descending Price lists" });
+                }
             }
-
             /*--------------------------------------------------------------------------------------------------------------------------*/
 
             let productList = await productModel.find(filter).sort({ price: priceSort });
@@ -430,7 +428,7 @@ const deleteProduct = async function (req, res) {
         let check = await productModel.findOneAndUpdate({ _id: ProductId }, { isDeleted: true, deletedAt: new Date() }, { new: true })
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        return res.status(200).send({ status: true, message: "Product is Deleted Succesfully", data: check })
+        return res.status(200).send({ status: true, message: "Product is Deleted Succesfully" })
 
         /*----------------------------------------------------------------------------------------------------------------------------*/
 

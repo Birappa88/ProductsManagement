@@ -25,7 +25,7 @@ const authentication = async function (req, res, next) {
         ignoreExpiration: true,
       });
       if (Date.now() > decodedToken.exp * 1000) {
-        return res.status(401).send({ status: false, message: "your token Session expired" });
+        return res.status(401).send({ status: false, message: "Your token Session expired" });
       }
 
       req.useId = decodedToken.userId;
@@ -49,7 +49,7 @@ const authentication = async function (req, res, next) {
 
 //=======================----------------->{ Authorization }<-------------=======================================//
 
-const authorization = async function (req, res, next) {
+const authorization = async function (req, res, next) { 
   try {
 
     const userId = req.params.userId;
