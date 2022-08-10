@@ -46,7 +46,7 @@ const addToCart = async (req, res) => {
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
         if (!Quantity) {
-            return res.status(404).send({ status: false, message: "Enter Quantity of the Products" })
+            return res.status(400).send({ status: false, message: "Enter Quantity of the Products" })
         }
         if (isNaN(Quantity)) {
             return res.status(404).send({ status: false, message: "Enter Valid Quantity" })
@@ -72,9 +72,7 @@ const addToCart = async (req, res) => {
             };
             /*----------------------------------------------------------------------------------------------------------------------------*/
             
-            await cartModel.create(cartData)
-
-            const createdCart = await cartModel.findOne({ _id: cartId }).populate({ path: "items.productId", select: { title: 1, price: 1, availableSizes: 1 } })
+            const createdCart = await cartModel.create(cartData)
             /*----------------------------------------------------------------------------------------------------------------------------*/
 
             return res.status(201).send({ status: true, message: "Cart is created successfully", data: createdCart })
@@ -105,11 +103,9 @@ const addToCart = async (req, res) => {
                     cartExist.items[i].quantity = cartExist.items[i].quantity + quanty
                     cartExist.totalPrice = checkUser.totalPrice + (Quantity * productExist.price)
                     cartExist.save()
-
-                    const addQuantity = await cartModel.findOne({ _id: cartId }).populate({ path: "items.productId", select: { title: 1, price: 1, availableSizes: 1 } })
                     /*----------------------------------------------------------------------------------------------------------------------------*/
 
-                    return res.status(200).send({ status: true, message: "Product Quantity is added to Cart Successfully", data: addQuantity })
+                    return res.status(200).send({ status: true, message: "Product Quantity is added to Cart Successfully", data: cartExist })
                 }
             }
             /*----------------------------------------------------------------------------------------------------------------------------*/
@@ -254,7 +250,7 @@ const getCart = async (req, res) => {
         const UserId = req.params.userId
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const userExist = await userModel.findOne({ _id: UserId, isDeleted: false })
+        const userExist = await userModel.findOne({ _id: UserId })
         if (!userExist) {
             return res.status(404).send({ status: false, message: "User is not found with this UserId" })
         }
@@ -285,7 +281,7 @@ const deleteCart = async (req, res) => {
         const UserId = req.params.userId
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const userExist = await userModel.findOne({ _id: UserId, isDeleted: false })
+        const userExist = await userModel.findOne({ _id: UserId })
         if (!userExist) {
             return res.status(404).send({ status: false, message: "User is not found with this UserId" })
         }

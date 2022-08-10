@@ -19,7 +19,7 @@ const createOrder = async (req, res) => {
         const CartId = data.cartId
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const userExist = await userModel.findOne({ _id: UserId, isDeleted: false })
+        const userExist = await userModel.findOne({ _id: UserId})
         if (!userExist) {
             return res.status(404).send({ status: false, message: "User is not found with this UserId" })
         }
@@ -110,7 +110,7 @@ const updateOrder = async (req, res) => {
         const OrderId = data.orderId
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
-        const userExist = await userModel.findOne({ _id: UserId, isDeleted: false })
+        const userExist = await userModel.findOne({ _id: UserId })
         if (!userExist) {
             return res.status(404).send({ status: false, message: "User is not found with this UserId" })
         }
@@ -124,6 +124,10 @@ const updateOrder = async (req, res) => {
         const checkUser = await cartModel.findOne({ userId: UserId })
         if (!checkUser) {
             return res.status(404).send({ status: false, message: "Cart is not found with this UserId" })
+        }
+        const userOrdered = await orderModel.findOne({ userId: UserId })
+        if (!userOrdered) {
+            return res.status(400).send({ status: false, message: `Your Order is not placed` })
         }
         /*----------------------------------------------------------------------------------------------------------------------------*/
 
